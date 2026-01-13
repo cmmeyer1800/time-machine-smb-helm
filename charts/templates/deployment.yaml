@@ -48,19 +48,34 @@ spec:
                   name: {{ .Values.authentication.secretName }}
                   key: {{ .Values.authentication.passwordKey }}
           args:
-            - -w "HOME"
-            - -u "$(USERNAME);$(PASSWORD)"
-            - -s "Time Machine;/share/timemachine;yes;no;no;;;;Time Machine"
+            - -w
+            - HOME
+
+            - -u
+            - $(USERNAME);$(PASSWORD)
+
+            - -s
+            - Time Machine;/share/timemachine;yes;no;no;;;;Time Machine
+
             - -p
             - -r
-            - -g "server string = dockerized CIFS SMB server"
-            - -g "ea support = yes"
-            - -g "fruit:advertise_fullsync = true"
-            - -g "durable handles = yes"
-            - -g "kernel oplocks = no"
-            - -g "kernel share modes = no"
-            - -g "posix locking = no"
-            -  -g "inherit acls = yes"
+
+            - -g
+            - server string = dockerized CIFS SMB server
+            - -g
+            - ea support = yes
+            - -g
+            - fruit:advertise_fullsync = true
+            - -g
+            - durable handles = yes
+            - -g
+            - kernel oplocks = no
+            - -g
+            - kernel share modes = no
+            - -g
+            - posix locking = no
+            - -g
+            - inherit acls = yes
           ports:
             - name: smb
               containerPort: 445
