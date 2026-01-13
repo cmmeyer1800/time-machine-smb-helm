@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "time-machine-smb.fullname" . }}
+  labels:
+    {{- include "time-machine-smb.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "time-machine-smb.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "time-machine-smb.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env: 
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.authentication.secretName }}
+                  key: {{ .Values.authentication.usernameKey }}
+            - name: PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.authentication.secretName }}
+                  key: {{ .Values.authentication.passwordKey }}
+          args:
+            {{ }}
+            - -w "HOME"
+            - -u "$(USERNAME);$(PASSWORD)"
+            - -s "Time Machine;/share/timemachine;yes;no;no;;;;Time Machine"
+            - -p
+            - -r
+            - -g "server string = dockerized CIFS SMB server"
+            - -g "ea support = yes"
+            - -g "fruit:advertise_fullsync = true"
+            - -g "durable handles = yes"
+            - -g "kernel oplocks = no"
+            - -g "kernel share modes = no"
+            - -g "posix locking = no"
+            -  -g "inherit acls = yes"
+          ports:
+            - name: smb
+              containerPort: 445
+              protocol: TCP
+            - name: netbios
+              containerPort: 139
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: smb-data
+              mountPath: /share/timemachine
+      volumes:
+      - name: smb-data
+        persistentVolumeClaim:
+          {{- if .Values.persistence.existingClaim }}
+          claimName: {{ .Values.persistence.existingClaim }}
+          {{- else }}
+          claimName: {{ include "time-machine-smb.fullname" . }}-pvc
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
