@@ -48,7 +48,6 @@ spec:
                   name: {{ .Values.authentication.secretName }}
                   key: {{ .Values.authentication.passwordKey }}
           args:
-            {{ }}
             - -w "HOME"
             - -u "$(USERNAME);$(PASSWORD)"
             - -s "Time Machine;/share/timemachine;yes;no;no;;;;Time Machine"
